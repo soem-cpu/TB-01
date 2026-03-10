@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import io
 
-from rules.ssr11 import run_ssr11
+from rules.ssr11 import check_rules
 
 st.image("assets/TB_image2.jpg", width=200)
 
@@ -39,7 +39,7 @@ if data_file:
     try:
 
         if indicator == "SSR1.1":
-            results = run_ssr11(data_file)
+            results = check_rules(data_file)
 
         else:
             st.warning(f"⚠️ {indicator} rules not implemented yet")
