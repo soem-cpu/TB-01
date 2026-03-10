@@ -22,6 +22,12 @@ def normalize_col_name(c):
         .replace("  ", " ")
     )
 
+def norm_text(x):
+    s = norm_lower(x)
+    for ch in [":", "-", "_", "/", ","]:
+        s = s.replace(ch, " ")
+    return " ".join(s.split())
+
 def find_column(df, target_name):
     target = normalize_col_name(target_name)
     for c in df.columns:
@@ -46,12 +52,37 @@ def is_numeric(val, min_v=0, max_v=100):
     except Exception:
         return False
 
-# ---------------- Date cleaner ----------------
+def extract_prefix(name):
+    n = normalize(name)
+    for p in ["Ma ", "Daw ", "Mg ", "U ", "Ko "]:
+        if n.startswith(p):
+            return p.strip()
+    return None
+
+# ---------------- Lab confirmation ----------------
+
+def BC_results(row):
+    gene_cols = ["Gene Xpert Result","Gene Xpert Result_0","Gene Xpert Result_2/3","Gene Xpert Result_5","Gene Xpert Result_End"]
+    truenat_cols = ["TrueNat Result","TrueNat Result_0","TrueNat Result_2/3","TrueNat Result_5","TrueNat Result_End"]
+    micro_cols = ["Microscopy Result","Microscopy Result_0","Microscopy Result_2/3","Microscopy Result_5","Microscopy Result_End"]
+
+    GENE_POS = {"t","tt","ti","rr","mtb detected","rif detected","rif not detected","rif indeterminate","mtb detected trace"}
+    TRUENAT_POS = {"vt","rr","ti","valid mtb detected","mtb detected"}
+    MICRO_POS = {"scanty","1+","2+","3+","positive"}
+
+    for cols, positives in [(gene_cols, GENE_POS),(truenat_cols, TRUENAT_POS),(micro_cols, MICRO_POS)]:
+        for c in cols:
+            if c in row.index:
+                val = norm_lower(row.get(c))
+                if any(k in val for k in positives):
+                    return 1
+    return 0
+
+# ---------------- Date formatting ----------------
 
 def clean_dates(df):
     if df is None or df.empty:
         return df
-
     for col in df.columns:
         s = df[col]
         if pd.api.types.is_numeric_dtype(s):
